@@ -1,4 +1,4 @@
-# Btrust builder LBCLI Chapter one exercises
+# Btrust builder LBCLI Chapter two exercises
 
 ## Instructions
 
