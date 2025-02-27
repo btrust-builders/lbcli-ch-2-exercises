@@ -13,10 +13,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4  # Check out the repository code
 
-      - name: Run Bitcoin Core setup script
+      - name: Cache Bitcoin Core
+        id: cache-bitcoin
+        uses: actions/cache@v3
+        with:
+          path: |
+            bitcoin-28.0
+            bitcoin-28.0-x86_64-linux-gnu.tar.gz
+          key: bitcoin-core-28.0
+          
+      - name: Setup Bitcoin Core
         run: |
-          chmod +x .github/setup.sh
-          .github/setup.sh
+          if [ "${{ steps.cache-bitcoin.outputs.cache-hit }}" != 'true' ]; then
+            wget https://bitcoincore.org/bin/bitcoin-core-28.0/bitcoin-28.0-x86_64-linux-gnu.tar.gz
+            tar -xzvf bitcoin-28.0-x86_64-linux-gnu.tar.gz
+          fi
+          sudo bash .github/setup.sh
 
       - name: Start bitcoind in regtest mode
         run: |
@@ -34,26 +46,8 @@ jobs:
           done
 
       - name: Verify Bitcoin CLI version
-        run: |
-          BITCOIN_VERSION=$(submission/01.sh)
-          echo "Bitcoin CLI Version: $BITCOIN_VERSION"
-
-          if [[ $BITCOIN_VERSION == *"28"* ]]; then
-            echo "Success: Bitcoin CLI version"
-          else
-            echo "Error: Bitcoin CLI version failed"
-            exit 1
-          fi
+        run: bash .github/tests/version.test.sh
 
       - name: Verify Bitcoin chain
-        run: |
-            chmod +x submission/02.sh
-            CHAIN=$(submission/02.sh)
-            echo "Bitcoin chain: $CHAIN"
-            if [[ "$CHAIN" == "regtest" ]]; then
-              echo "Chain verification passed!"
-            else
-              echo "Chain verification failed!"
-              exit 1
-            fi
+        run: bash .github/tests/chain.test.sh
             
