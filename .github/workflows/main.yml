@@ -13,10 +13,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4  # Check out the repository code
 
-      - name: Run Bitcoin Core setup script
+      - name: Cache Bitcoin Core
+        id: cache-bitcoin
+        uses: actions/cache@v3
+        with:
+          path: |
+            bitcoin-28.0
+            bitcoin-28.0-x86_64-linux-gnu.tar.gz
+          key: bitcoin-core-28.0
+          
+      - name: Setup Bitcoin Core
         run: |
-          chmod +x .github/setup.sh
-          .github/setup.sh
+          if [ "${{ steps.cache-bitcoin.outputs.cache-hit }}" != 'true' ]; then
+            wget https://bitcoincore.org/bin/bitcoin-core-28.0/bitcoin-28.0-x86_64-linux-gnu.tar.gz
+            tar -xzvf bitcoin-28.0-x86_64-linux-gnu.tar.gz
+          fi
+          sudo bash .github/setup.sh
 
       - name: Start bitcoind in regtest mode
         run: |
